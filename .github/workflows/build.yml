@@ -1,0 +1,52 @@
+name: Build and Push
+
+on:
+  workflow_run:
+    workflows: ["Test"]
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::029646685128:role/reddit-tracker-gh-actions
+          aws-region: eu-central-1
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push image to ECR
+        uses: docker/build-push-action@v7
+        env:
+          ECR_REGISTRY: 029646685128.dkr.ecr.eu-central-1.amazonaws.com
+          ECR_REPOSITORY: reddit-tracker-ecr
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          provenance: false
+          sbom: false
+          tags: |
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
