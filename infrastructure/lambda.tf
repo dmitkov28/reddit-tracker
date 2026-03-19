@@ -10,7 +10,7 @@ module "lambda_function" {
   memory_size    = 1024
   timeout        = 120
 
-  image_uri    = "${reddit_tracker_ecr.reddit_tracker_ecr_uri}:${var.image_tag}"
+  image_uri    = "${module.reddit-tracker-ecr.repository_url}:${var.image_tag}"
   package_type = "Image"
 
   cloudwatch_logs_retention_in_days = 5
