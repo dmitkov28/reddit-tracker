@@ -3,7 +3,7 @@ import httpx
 
 from src._types import RedditResponse
 from src.model import ThreadClean
-from src import logger
+from src.logger import logger
 
 
 class RedditClient:

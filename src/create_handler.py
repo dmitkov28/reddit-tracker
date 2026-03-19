@@ -1,7 +1,8 @@
 import httpx
 
-from src import RedditClient, logger
+from src import RedditClient
 from src.utils.str_utils import clean_subreddit
+from src.logger import logger
 
 
 def create_handler():
