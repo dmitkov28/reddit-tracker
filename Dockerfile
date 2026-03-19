@@ -12,9 +12,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY src ./src
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen 
-
-RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen && \
     uv pip install awslambdaric
 
 ENTRYPOINT [".venv/bin/python", "-m", "awslambdaric"]
