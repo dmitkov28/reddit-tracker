@@ -15,6 +15,24 @@ class RedditClient:
     def _build_url(self, subreddit: str) -> str:
         return f"{self.base_url}/r/{subreddit}/new.json"
 
+    @property
+    def _headers(self) -> dict:
+        headers = {
+            "Host": "www.reddit.com",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:147.0) Gecko/20100101 Firefox/147.0",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Connection": "keep-alive",
+            "Priority": "u=0, i",
+            "TE": "trailers",
+        }
+        return headers
+
     def _process_threads(self, response: RedditResponse):
         threads = response["data"]["children"]
         return [
@@ -30,7 +48,7 @@ class RedditClient:
     def fetch_threads_for_subreddit(self, subreddit: str, limit: int = 100):
         url = self._build_url(subreddit=subreddit)
         logger.info(f"Fetching {url}")
-        res = self._http.get(url=url, params={"limit": limit})
+        res = self._http.get(url=url, params={"limit": limit}, headers=self._headers)
         logger.info(f"Status: {res.status_code}")
         res.raise_for_status()
         res_json: RedditResponse = res.json()
