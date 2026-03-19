@@ -3,6 +3,7 @@ import httpx
 
 from src._types import RedditResponse
 from src.model import ThreadClean
+from src import logger
 
 
 class RedditClient:
@@ -27,8 +28,10 @@ class RedditClient:
         ]
 
     def fetch_threads_for_subreddit(self, subreddit: str, limit: int = 100):
-        res = self._http.get(
-            url=self._build_url(subreddit=subreddit), params={"limit": limit}
-        )
+        url = self._build_url(subreddit=subreddit)
+        logger.info(f"Fetching {url}")
+        res = self._http.get(url=url, params={"limit": limit})
+        logger.info(f"Status: {res.status_code}")
+        res.raise_for_status()
         res_json: RedditResponse = res.json()
         return self._process_threads(response=res_json)
