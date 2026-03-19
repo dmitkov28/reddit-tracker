@@ -2,6 +2,12 @@ name: Deploy
 
 on:
     workflow_dispatch:
+    workflow_run:
+        workflows: ["Build and Push"]
+        types: 
+            - completed
+        branches:
+            - main
     push:
         branches: [main]
         paths:
@@ -30,7 +36,8 @@ jobs:
             TF_CLOUD_ORGANIZATION: "dmitkov28"
             TF_WORKSPACE: "reddit-tracker-workspace"
             IMAGE_TAG: ${{ needs.setup.outputs.image_tag }}
-
+            
+        if: github.event.workflow_run.conclusion == 'success'
         steps:
             - name: Checkout code
               uses: actions/checkout@v6
