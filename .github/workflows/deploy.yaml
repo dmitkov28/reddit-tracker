@@ -12,36 +12,22 @@ permissions:
 jobs:
     terraform:
         runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./infrastructure
         env:
             TF_CLOUD_ORGANIZATION: "dmitkov28"
             TF_WORKSPACE: "reddit-tracker-workspace"
             TF_API_TOKEN: ${{ secrets.TFC_TOKEN }}
 
         steps:
-            - uses: actions/checkout@v4
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-            - uses: hashicorp/setup-terraform@v3
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
 
-            - name: Upload Configuration
-              uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.0
-              id: upload
-              with:
-                  workspace: ${{ env.TF_WORKSPACE }}
-                  directory: "."
-
-            - name: Create Run
-              uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.0
-              id: run
-              with:
-                  workspace: ${{ env.TF_WORKSPACE }}
-                  configuration_version: ${{ steps.upload.outputs.configuration_version_id }}
-                  variables: |
-                      {
-                          "image_tag": "sha-${{ github.sha }}"
-                      }
-
-            - name: Apply Run
-              uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.3.0
-              with:
-                  run: ${{ steps.run.outputs.run_id }}
-                  comment: "Triggered from GitHub Actions"
+            - name: Create plan
+              run: |
+                terraform init
+                terraform plan --var="image-tag=sha-${{github.sha}}"
