@@ -33,4 +33,11 @@ jobs:
             - name: Create plan
               run: |
                 terraform init
-                terraform plan --var="image_tag=sha-${{github.sha}}"
+                terraform plan --var="image_tag=sha-${{github.sha}}" -out=tfplan
+            
+            - name: Upload Plan
+              uses: actions/upload-artifact@v7
+              with:
+                name: tfplan
+                path: tfplan
+        
