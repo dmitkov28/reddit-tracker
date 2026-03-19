@@ -81,6 +81,7 @@ jobs:
               uses: actions/download-artifact@v8
               with:
                   name: tfplan
+                  path: ./infrastructure
 
             - name: Terraform Init
               run: terraform init
