@@ -15,7 +15,7 @@ module "reddit-tracker-ecr" {
           tagStatus     = "tagged",
           tagPrefixList = ["v", "latest", "main", "dev", "prod", "sha"],
           countType     = "imageCountMoreThan",
-          countNumber   = 10
+          countNumber   = 3
         },
         action = { type = "expire" }
       },
