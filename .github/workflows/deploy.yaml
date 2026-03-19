@@ -4,14 +4,14 @@ on:
     workflow_dispatch:
     workflow_run:
         workflows: ["Build and Push"]
-        types: 
+        types:
             - completed
         branches:
             - main
     push:
         branches: [main]
         paths:
-            - './infrastructure'
+            - "./infrastructure"
 
 permissions:
     id-token: write
@@ -23,10 +23,10 @@ jobs:
         outputs:
             image_tag: ${{ steps.calc.outputs.short_sha }}
         steps:
-        - id: calc
-          run: echo "short_sha=${GITHUB_SHA:0:10}" >> $GITHUB_OUTPUT
+            - id: calc
+              run: echo "short_sha=${GITHUB_SHA:0:10}" >> $GITHUB_OUTPUT
 
-    terraform:
+    plan:
         needs: setup
         runs-on: ubuntu-latest
         defaults:
@@ -36,7 +36,7 @@ jobs:
             TF_CLOUD_ORGANIZATION: "dmitkov28"
             TF_WORKSPACE: "reddit-tracker-workspace"
             IMAGE_TAG: ${{ needs.setup.outputs.image_tag }}
-            
+
         if: github.event.workflow_run.conclusion == 'success'
         steps:
             - name: Checkout code
@@ -45,16 +45,45 @@ jobs:
             - name: Setup Terraform
               uses: hashicorp/setup-terraform@v4
               with:
-                cli_config_credentials_token: ${{ secrets.TFC_TOKEN }}
-                
+                  cli_config_credentials_token: ${{ secrets.TFC_TOKEN }}
+
             - name: Create plan
               run: |
-                terraform init
-                terraform plan --var="image_tag=sha-${{ env.IMAGE_TAG }}" -out=tfplan
-            
+                  terraform init
+                  terraform plan --var="image_tag=sha-${{ env.IMAGE_TAG }}" -out=tfplan
+
             - name: Upload Plan
               uses: actions/upload-artifact@v7
               with:
-                name: tfplan
-                path: ./infrastructure/tfplan
-        
+                  name: tfplan
+                  path: ./infrastructure/tfplan
+
+    apply:
+        needs: plan
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./infrastructure
+
+        environment:
+            name: production
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v4
+              with:
+                  cli_config_credentials_token: ${{ secrets.TFC_TOKEN }}
+
+            - name: Download Plan
+              uses: actions/download-artifact@v8
+              with:
+                  name: tfplan
+
+            - name: Terraform Init
+              run: terraform init
+
+            - name: Apply Approved Plan
+              run: terraform apply tfplan
