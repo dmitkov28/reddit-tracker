@@ -12,7 +12,16 @@ permissions:
     contents: read
 
 jobs:
+    setup:
+        runs-on: ubuntu-latest
+        outputs:
+            image_tag: ${{ steps.calc.outputs.short_sha }}
+        steps:
+        - id: calc
+          run: echo "short_sha=${GITHUB_SHA:0:10}" >> $GITHUB_OUTPUT
+
     terraform:
+        needs: setup
         runs-on: ubuntu-latest
         defaults:
             run:
@@ -20,6 +29,7 @@ jobs:
         env:
             TF_CLOUD_ORGANIZATION: "dmitkov28"
             TF_WORKSPACE: "reddit-tracker-workspace"
+            IMAGE_TAG: ${{ needs.setup.outputs.image_tag }}
 
         steps:
             - name: Checkout code
@@ -33,11 +43,11 @@ jobs:
             - name: Create plan
               run: |
                 terraform init
-                terraform plan --var="image_tag=sha-${{github.sha}}" -out=tfplan
+                terraform plan --var="image_tag=sha-${{ env.IMAGE_TAG }}" -out=tfplan
             
             - name: Upload Plan
               uses: actions/upload-artifact@v7
               with:
                 name: tfplan
-                path: tfplan
+                path: ./infrastructure/tfplan
         
