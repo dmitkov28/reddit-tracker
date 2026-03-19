@@ -16,6 +16,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7.6.0
         with:
           version: "latest"
+          enable-cache: true
 
       - run: uv sync
       - run: uv run ruff check
