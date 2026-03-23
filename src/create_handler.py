@@ -12,7 +12,7 @@ def create_handler():
         with httpx.Client(timeout=30) as client:
             client = RedditClient()
             try:
-                client.fetch_threads_for_subreddit(subreddit=subreddit)
+                return client.fetch_threads_for_subreddit(subreddit=subreddit)
             except Exception as e:
                 logger.exception(str(e))
 
