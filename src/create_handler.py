@@ -14,7 +14,7 @@ def create_handler():
         subreddit = clean_subreddit(event["subreddit"])
 
         with httpx.Client(timeout=30, proxy=PROXY) as client:
-            client = RedditClient()
+            client = RedditClient(client=client)
             try:
                 return client.fetch_threads_for_subreddit(subreddit=subreddit)
             except Exception as e:
