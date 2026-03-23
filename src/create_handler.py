@@ -16,7 +16,10 @@ def create_handler():
         with httpx.Client(timeout=30, proxy=PROXY) as client:
             client = RedditClient(client=client)
             try:
-                return client.fetch_threads_for_subreddit(subreddit=subreddit)
+                return [
+                    t.serialized
+                    for t in client.fetch_threads_for_subreddit(subreddit=subreddit)
+                ]
             except Exception as e:
                 logger.exception(str(e))
 
