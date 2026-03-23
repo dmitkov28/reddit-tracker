@@ -10,6 +10,10 @@ module "lambda_function" {
   memory_size    = 1024
   timeout        = 120
 
+  environment_variables = {
+    "HTTP_PROXY" = var.http_proxy
+  }
+
   image_uri    = "${module.reddit-tracker-ecr.repository_url}:${var.image_tag}"
   package_type = "Image"
 
