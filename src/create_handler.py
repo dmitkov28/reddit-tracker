@@ -5,6 +5,7 @@ import httpx
 from src import RedditClient
 from src.model import CommentList
 from src.storer import S3Storer
+from src.storer.storer import Storer
 from src.utils.date_utils import Today
 from src.utils.s3 import S3, CommentPartition, ThreadPartition
 from src.logger import logger
@@ -13,16 +14,14 @@ from src.utils.str_utils import clean_subreddit
 PROXY = os.getenv("HTTP_PROXY")
 BUCKET = os.getenv("BUCKET")
 
+if not BUCKET:
+    raise ValueError("No bucket name provided")
 
-def create_handler():
+
+def create_handler(storer: Storer = S3Storer(S3(bucket=BUCKET))):
     def handler(event: dict, context: dict):
         subreddit = clean_subreddit(event["subreddit"])
 
-        if not BUCKET:
-            raise ValueError("No bucket name provided")
-
-        s3 = S3(bucket=BUCKET)
-        storer = S3Storer(s3=s3)
         today = Today()
 
         with httpx.Client(timeout=30, proxy=PROXY) as client:
@@ -31,7 +30,6 @@ def create_handler():
             try:
                 comments = client.fetch_comments_for_subreddit(subreddit=subreddit)
                 threads = client.fetch_threads_for_subreddit(subreddit=subreddit)
-
                 for thread in threads:
                     storer.store(
                         partition=ThreadPartition(
