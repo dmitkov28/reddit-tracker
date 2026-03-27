@@ -1,0 +1,82 @@
+name: Deploy
+
+on:
+    workflow_dispatch:
+    push:
+        branches: [main]
+        paths:
+            - "./infrastructure"
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+    setup:
+        runs-on: ubuntu-latest
+        outputs:
+            image_tag: ${{ steps.calc.outputs.short_sha }}
+        steps:
+            - id: calc
+              run: echo "short_sha=${GITHUB_SHA:0:10}" >> $GITHUB_OUTPUT
+
+    plan:
+        needs: setup
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./infrastructure
+        env:
+            TF_CLOUD_ORGANIZATION: "dmitkov28"
+            TF_WORKSPACE: "reddit-tracker-workspace"
+    
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v4
+              with:
+                  cli_config_credentials_token: ${{ secrets.TFC_TOKEN }}
+
+            - name: Create plan
+              run: |
+                  terraform init
+                  terraform plan -out=tfplan
+
+            - name: Upload Plan
+              uses: actions/upload-artifact@v7
+              with:
+                  name: tfplan
+                  path: ./infrastructure/tfplan
+
+    apply:
+        needs: plan
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./infrastructure
+
+        environment:
+            name: production
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v4
+              with:
+                  cli_config_credentials_token: ${{ secrets.TFC_TOKEN }}
+
+            - name: Download Plan
+              uses: actions/download-artifact@v8
+              with:
+                  name: tfplan
+                  path: ./infrastructure
+
+            - name: Terraform Init
+              run: terraform init
+
+            - name: Apply Approved Plan
+              run: terraform apply tfplan
