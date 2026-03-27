@@ -1,90 +1,50 @@
-name: Deploy
+name: Deploy Lambda
 
 on:
-    workflow_dispatch:
-    workflow_run:
-        workflows: ["Build and Push"]
-        types:
-            - completed
-        branches:
-            - main
-    push:
-        branches: [main]
-        paths:
-            - "./infrastructure"
+  workflow_run:
+    workflows: ["Build and Push"]
+    types:
+      - completed
+    branches:
+      - main
 
 permissions:
-    id-token: write
-    contents: read
+  id-token: write
+  contents: read
 
 jobs:
-    setup:
-        runs-on: ubuntu-latest
-        outputs:
-            image_tag: ${{ steps.calc.outputs.short_sha }}
-        steps:
-            - id: calc
-              run: echo "short_sha=${GITHUB_SHA:0:10}" >> $GITHUB_OUTPUT
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.calc.outputs.short_sha }}
+    steps:
+      - id: calc
+        run: echo "short_sha=${GITHUB_SHA:0:10}" >> $GITHUB_OUTPUT
+  
+  build-and-push:
+    needs: setup
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_TAG: ${{ needs.setup.outputs.image_tag }}
+    
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::029646685128:role/reddit-tracker-gh-actions
+          aws-region: eu-central-1
 
-    plan:
-        needs: setup
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: ./infrastructure
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Update Lambda function code
         env:
-            TF_CLOUD_ORGANIZATION: "dmitkov28"
-            TF_WORKSPACE: "reddit-tracker-workspace"
-            IMAGE_TAG: ${{ needs.setup.outputs.image_tag }}
-
-        if: github.event.workflow_run.conclusion == 'success'
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v6
-
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v4
-              with:
-                  cli_config_credentials_token: ${{ secrets.TFC_TOKEN }}
-
-            - name: Create plan
-              run: |
-                  terraform init
-                  terraform plan --var="image_tag=sha-${{ env.IMAGE_TAG }}" -out=tfplan
-
-            - name: Upload Plan
-              uses: actions/upload-artifact@v7
-              with:
-                  name: tfplan
-                  path: ./infrastructure/tfplan
-
-    apply:
-        needs: plan
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: ./infrastructure
-
-        environment:
-            name: production
-
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v6
-
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v4
-              with:
-                  cli_config_credentials_token: ${{ secrets.TFC_TOKEN }}
-
-            - name: Download Plan
-              uses: actions/download-artifact@v8
-              with:
-                  name: tfplan
-                  path: ./infrastructure
-
-            - name: Terraform Init
-              run: terraform init
-
-            - name: Apply Approved Plan
-              run: terraform apply tfplan
+          ECR_REGISTRY: 029646685128.dkr.ecr.eu-central-1.amazonaws.com
+          ECR_REPOSITORY: reddit-tracker-ecr
+          FUNCTION_NAME: reddit-tracker
+        run: |
+          aws lambda update-function-code \
+          --function-name ${{ env.FUNCTION_NAME }} \
+          --image-uri ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:sha-${{ github.sha }} \
+          > /dev/null
