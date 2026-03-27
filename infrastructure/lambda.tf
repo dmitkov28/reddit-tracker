@@ -15,8 +15,10 @@ module "lambda_function" {
     "BUCKET"     = aws_s3_bucket.reddit-tracker-bucket.bucket
   }
 
-  image_uri    = "${module.reddit-tracker-ecr.repository_url}:${var.image_tag}"
+  image_uri    = "${module.reddit-tracker-ecr.repository_url}:latest" # managed separately
   package_type = "Image"
+
+  ignore_source_code_hash = true
 
   cloudwatch_logs_retention_in_days = 5
 
