@@ -20,13 +20,13 @@ jobs:
     steps:
       - id: calc
         run: echo "short_sha=${GITHUB_SHA:0:10}" >> $GITHUB_OUTPUT
-  
+
   build-and-push:
     needs: setup
     runs-on: ubuntu-latest
     env:
       IMAGE_TAG: ${{ needs.setup.outputs.image_tag }}
-    
+
     if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Configure AWS credentials (OIDC)
@@ -43,8 +43,9 @@ jobs:
           ECR_REGISTRY: 029646685128.dkr.ecr.eu-central-1.amazonaws.com
           ECR_REPOSITORY: reddit-tracker-ecr
           FUNCTION_NAME: reddit-tracker
+          SHORT_SHA: ${{ needs.setup.outputs.image_tag }}
         run: |
           aws lambda update-function-code \
           --function-name ${{ env.FUNCTION_NAME }} \
-          --image-uri ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:sha-${{ github.sha }} \
+          --image-uri ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:sha-${{ env.SHORT_SHA }} \
           > /dev/null
