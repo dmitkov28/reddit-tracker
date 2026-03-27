@@ -3,9 +3,10 @@ import os
 import httpx
 
 from src import RedditClient
+from src.model import CommentList
 from src.storer import S3Storer
 from src.utils.date_utils import Today
-from src.utils.s3 import S3, Partition
+from src.utils.s3 import S3, CommentPartition, ThreadPartition
 from src.logger import logger
 from src.utils.str_utils import clean_subreddit
 
@@ -16,6 +17,7 @@ BUCKET = os.getenv("BUCKET")
 def create_handler():
     def handler(event: dict, context: dict):
         subreddit = clean_subreddit(event["subreddit"])
+
         if not BUCKET:
             raise ValueError("No bucket name provided")
 
@@ -27,10 +29,12 @@ def create_handler():
             client = RedditClient(client=client)
 
             try:
+                comments = client.fetch_comments_for_subreddit(subreddit=subreddit)
                 threads = client.fetch_threads_for_subreddit(subreddit=subreddit)
+
                 for thread in threads:
                     storer.store(
-                        partition=Partition(
+                        partition=ThreadPartition(
                             subreddit=subreddit,
                             year=today.year,
                             month=today.month,
@@ -38,6 +42,22 @@ def create_handler():
                             thread_id=thread.id,
                         ),
                         data=thread,
+                    )
+                    comments_for_thread = [
+                        comment
+                        for comment in comments
+                        if comment.thread_id == thread.id
+                    ]
+                    comment_list = CommentList(data=comments_for_thread)
+                    storer.store(
+                        partition=CommentPartition(
+                            subreddit=subreddit,
+                            thread_id=thread.id,
+                            year=today.year,
+                            month=today.month,
+                            day=today.day,
+                        ),
+                        data=comment_list,
                     )
 
             except Exception as e:
