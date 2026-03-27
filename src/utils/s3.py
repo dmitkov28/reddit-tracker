@@ -27,9 +27,10 @@ class S3:
 @dataclass
 class Partition:
     subreddit: str
+    thread_id: str
     year: int
     month: int
     day: int
 
     def __str__(self):
-        return f"subreddit={self.subreddit}/year={self.year}/month={self.month}/day={self.day}"
+        return f"subreddit={self.subreddit}/year={self.year}/month={self.month}/day={self.day}/thread={self.thread_id}.json"
