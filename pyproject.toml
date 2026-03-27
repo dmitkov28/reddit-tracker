@@ -11,8 +11,8 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "pytest>=9.0.2",
-    "pytest-coverage>=0.0",
-    "ruff>=0.15.6",
-]
+dev = ["pytest>=9.0.2", "pytest-coverage>=0.0", "ruff>=0.15.6"]
+
+
+[tool.ruff]
+lint.extend-select = ["T100"]
