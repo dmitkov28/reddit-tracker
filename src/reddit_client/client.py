@@ -59,7 +59,7 @@ class RedditClient:
         return [
             Comment(
                 id=comment["data"]["id"],
-                thread_id=comment["data"]["parent_id"].removeprefix("t3_"),
+                thread_id=comment["data"]["link_id"].removeprefix("t3_"),
                 permalink=comment["data"]["permalink"],
                 upvotes=comment["data"]["ups"],
                 text=comment["data"]["body"],

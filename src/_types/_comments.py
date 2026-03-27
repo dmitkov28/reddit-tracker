@@ -5,7 +5,7 @@ from typing_extensions import TypedDict
 
 class CommentData(TypedDict):
     id: str
-    parent_id: str
+    link_id: str
     permalink: str
     ups: int
     body: str
