@@ -55,15 +55,16 @@ class RedditClient:
 
     def _process_comments(self, response: RedditCommentResponse):
         comments = response["data"]["children"]
+
         return [
             Comment(
-                id=comment["id"],
-                thread_id=comment["parent_id"].removeprefix("t3_"),
-                permalink=comment["permalink"],
-                upvotes=comment["ups"],
-                text=comment["body"],
-                created=comment["created"],
-                author=comment["author"],
+                id=comment["data"]["id"],
+                thread_id=comment["data"]["parent_id"].removeprefix("t3_"),
+                permalink=comment["data"]["permalink"],
+                upvotes=comment["data"]["ups"],
+                text=comment["data"]["body"],
+                created=comment["data"]["created"],
+                author=comment["data"]["author"],
             )
             for comment in comments
         ]
