@@ -5,6 +5,7 @@ from datetime import datetime
 
 @dataclass()
 class ThreadClean:
+    id: str
     title: str
     selftext: Optional[str]
     created: float

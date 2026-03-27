@@ -37,6 +37,7 @@ class RedditClient:
         threads = response["data"]["children"]
         return [
             ThreadClean(
+                id=thread["data"]["id"],
                 title=thread["data"]["title"],
                 selftext=thread["data"]["selftext"],
                 created=thread["data"]["created"],
