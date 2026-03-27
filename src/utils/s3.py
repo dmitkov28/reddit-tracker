@@ -15,7 +15,7 @@ class S3:
         except self._client.exceptions.NoSuchKey:
             return None
 
-    def put(self, key: str, data: dict) -> None:
+    def put(self, key: str, data: dict | list) -> None:
         self._client.put_object(
             Bucket=self._bucket,
             Key=key,
@@ -25,7 +25,7 @@ class S3:
 
 
 @dataclass
-class Partition:
+class ThreadPartition:
     subreddit: str
     thread_id: str
     year: int
@@ -33,4 +33,16 @@ class Partition:
     day: int
 
     def __str__(self):
-        return f"subreddit={self.subreddit}/year={self.year}/month={self.month}/day={self.day}/thread={self.thread_id}.json"
+        return f"threads/subreddit={self.subreddit}/year={self.year}/month={self.month}/day={self.day}/thread={self.thread_id}.json"
+
+
+@dataclass
+class CommentPartition:
+    subreddit: str
+    thread_id: str
+    year: int
+    month: int
+    day: int
+
+    def __str__(self):
+        return f"comments/subreddit={self.subreddit}/thread_id={self.thread_id}/year={self.year}/month={self.month}/day={self.day}/comments.json"
