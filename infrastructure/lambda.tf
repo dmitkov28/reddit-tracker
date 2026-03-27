@@ -12,6 +12,7 @@ module "lambda_function" {
 
   environment_variables = {
     "HTTP_PROXY" = var.http_proxy
+    "BUCKET"     = aws_s3_bucket.reddit-tracker-bucket.bucket
   }
 
   image_uri    = "${module.reddit-tracker-ecr.repository_url}:${var.image_tag}"
@@ -30,6 +31,14 @@ module "lambda_function" {
         "ecr:GetAuthorizationToken"
       ]
       resources = ["*"]
+    }
+    bucket_rw = {
+      effect = "Allow"
+      actions = [
+        "s3:GetObject",
+        "s3:PutObject"
+      ]
+      resources = ["${aws_s3_bucket.reddit-tracker-bucket.arn}/*"]
     }
   }
 
