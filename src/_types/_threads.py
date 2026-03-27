@@ -132,6 +132,6 @@ class Data(TypedDict):
     children: List[Children]
 
 
-class RedditResponse(TypedDict):
+class RedditThreadResponse(TypedDict):
     kind: str
     data: Data
