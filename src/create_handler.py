@@ -35,6 +35,7 @@ def create_handler():
                             year=today.year,
                             month=today.month,
                             day=today.day,
+                            thread_id=thread.id,
                         ),
                         data=thread,
                     )
