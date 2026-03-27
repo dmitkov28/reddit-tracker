@@ -47,16 +47,17 @@ def create_handler(storer: Storer = S3Storer(S3(bucket=BUCKET))):
                         if comment.thread_id == thread.id
                     ]
                     comment_list = CommentList(data=comments_for_thread)
-                    storer.store(
-                        partition=CommentPartition(
-                            subreddit=subreddit,
-                            thread_id=thread.id,
-                            year=today.year,
-                            month=today.month,
-                            day=today.day,
-                        ),
-                        data=comment_list,
-                    )
+                    if comment_list.data:
+                        storer.store(
+                            partition=CommentPartition(
+                                subreddit=subreddit,
+                                thread_id=thread.id,
+                                year=today.year,
+                                month=today.month,
+                                day=today.day,
+                            ),
+                            data=comment_list,
+                        )
 
             except Exception as e:
                 logger.exception(str(e))
