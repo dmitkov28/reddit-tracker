@@ -3,16 +3,9 @@ from typing import Optional
 from datetime import datetime
 
 
-@dataclass()
-class ThreadClean:
-    id: str
-    title: str
-    selftext: Optional[str]
+@dataclass
+class BaseEntity:
     created: float
-    author: str
-    permalink: str
-    comments: Optional[int] = 0
-    upvotes: Optional[int] = 0
 
     @property
     def created_dt(self):
@@ -24,22 +17,24 @@ class ThreadClean:
 
 
 @dataclass
-class Comment:
+class ThreadClean(BaseEntity):
+    id: str
+    title: str
+    selftext: Optional[str]
+    author: str
+    permalink: str
+    comments: Optional[int] = 0
+    upvotes: Optional[int] = 0
+
+
+@dataclass
+class Comment(BaseEntity):
     id: str
     thread_id: str
     text: str
-    created: float
     author: str
     permalink: str
     upvotes: Optional[int] = 0
-
-    @property
-    def created_dt(self):
-        return datetime.fromtimestamp(self.created)
-
-    @property
-    def serialized(self):
-        return asdict(self)
 
 
 @dataclass
