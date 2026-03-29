@@ -12,16 +12,7 @@ permissions:
     contents: read
 
 jobs:
-    setup:
-        runs-on: ubuntu-latest
-        outputs:
-            image_tag: ${{ steps.calc.outputs.short_sha }}
-        steps:
-            - id: calc
-              run: echo "short_sha=${GITHUB_SHA:0:10}" >> $GITHUB_OUTPUT
-
     plan:
-        needs: setup
         runs-on: ubuntu-latest
         defaults:
             run:
@@ -29,7 +20,7 @@ jobs:
         env:
             TF_CLOUD_ORGANIZATION: "dmitkov28"
             TF_WORKSPACE: "reddit-tracker-workspace"
-    
+
         steps:
             - name: Checkout code
               uses: actions/checkout@v6
