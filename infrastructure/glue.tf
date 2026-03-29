@@ -56,10 +56,14 @@ resource "aws_glue_crawler" "glue-crawler-threads" {
   name          = "reddit-threads-crawler"
   role          = aws_iam_role.glue-crawler-role.arn
 
+  schema_change_policy {
+    delete_behavior = "LOG"
+    update_behavior = "LOG"
+  }
+
   recrawl_policy {
     recrawl_behavior = "CRAWL_NEW_FOLDERS_ONLY"
   }
-
 
   s3_target {
     path = "s3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/threads/"
