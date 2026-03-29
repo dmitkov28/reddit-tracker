@@ -1,6 +1,8 @@
 import pytest
 
 from src.model import Comment, CommentList
+
+
 @pytest.fixture
 def timestamp():
     return 1774656000.0
@@ -24,23 +26,7 @@ def comment_list(timestamp):
 
 
 def test_serialized_property(comment_list):
-    assert sorted(comment_list.serialized, key=lambda x: x["id"]) == [
-        {
-            "created": 1774656000.0,
-            "id": "1",
-            "thread_id": "1",
-            "text": "test 1",
-            "author": "test 1",
-            "permalink": "test 1",
-            "upvotes": 10,
-        },
-        {
-            "created": 1774656000.0,
-            "id": "2",
-            "thread_id": "2",
-            "text": "test 2",
-            "author": "test 2",
-            "permalink": "test 2",
-            "upvotes": 10,
-        },
-    ]
+    assert (
+        comment_list.serialized
+        == '{"created": 1774656000.0, "id": "1", "thread_id": "1", "text": "test 1", "author": "test 1", "permalink": "test 1", "upvotes": 10}\n{"created": 1774656000.0, "id": "2", "thread_id": "2", "text": "test 2", "author": "test 2", "permalink": "test 2", "upvotes": 10}'
+    )
