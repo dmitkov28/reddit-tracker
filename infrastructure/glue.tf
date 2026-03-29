@@ -66,6 +66,12 @@ resource "aws_glue_crawler" "glue-crawler-comments" {
   name          = "reddit-comments-crawler"
   role          = aws_iam_role.glue-crawler-role.arn
 
+  schema_change_policy {
+    delete_behavior = "LOG"
+    update_behavior = "LOG"
+  }
+
+
   s3_target {
     path = "s3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/comments/"
   }
