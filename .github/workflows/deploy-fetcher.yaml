@@ -42,7 +42,7 @@ jobs:
         env:
           ECR_REGISTRY: 029646685128.dkr.ecr.eu-central-1.amazonaws.com
           ECR_REPOSITORY: reddit-tracker-ecr
-          FUNCTION_NAME: reddit-tracker
+          FUNCTION_NAME: reddit-tracker-fetcher
           SHORT_SHA: ${{ needs.setup.outputs.image_tag }}
         run: |
           aws lambda update-function-code \
