@@ -1,6 +1,7 @@
 from typing import Optional
 import httpx
 
+from src.utils.date_utils import Today
 from src._types import RedditThreadResponse
 from src._types._comments import RedditCommentResponse
 from src.model import Comment, ThreadClean
@@ -78,11 +79,32 @@ class RedditClient:
         res_json: RedditThreadResponse = res.json()
         return self._process_threads(response=res_json)
 
-    def fetch_comments_for_subreddit(self, subreddit: str, limit: int = 100):
+    def fetch_comments_for_subreddit(
+        self, subreddit: str, limit: int = 100, today: Today = Today()
+    ):
         url = self._build_comments_url(subreddit=subreddit)
         logger.info(f"Fetching {url}")
-        res = self._http.get(url=url, params={"limit": limit}, headers=self._headers)
-        logger.info(f"Status: {res.status_code}")
+        all_comments: list[Comment] = []
+        after = None
+        while True:
+            after, comments = self._fetch_comments_for_subreddit(
+                subreddit=subreddit, after=after
+            )
+            all_comments.extend(comments)
+            if comments[-1].created_dt != today:
+                return all_comments
+
+    def _fetch_comments_for_subreddit(
+        self, subreddit: str, limit: int = 100, after: Optional[str] = None
+    ):
+        url = self._build_comments_url(subreddit=subreddit)
+        params: dict = {"limit": limit}
+        if after:
+            params["after"] = after
+
+        res = self._http.get(url=url, params=params, headers=self._headers)
         res.raise_for_status()
         res_json: RedditCommentResponse = res.json()
-        return self._process_comments(response=res_json)
+        after = res_json.get("data", {}).get("after")
+
+        return after, self._process_comments(response=res_json)
