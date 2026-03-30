@@ -61,6 +61,9 @@ module "dispatcher-lambda-function" {
   memory_size    = 128
   timeout        = 15
 
+  runtime = "python3.13"
+  handler = "lambda_handler"
+
   environment_variables = {
     "BUCKET" = aws_s3_bucket.reddit-tracker-bucket.bucket
   }
