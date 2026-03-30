@@ -1,16 +1,20 @@
-name: Test
+name: Test Fetcher
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'src/**'
+      - 'fetcher/src/**'
   pull_request:
     paths:
-      - 'src/**'
+      - 'fetcher/src/**'
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./fetcher
+        
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7.6.0
