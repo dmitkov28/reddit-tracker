@@ -57,7 +57,7 @@ module "dispatcher-lambda-function" {
   architectures = ["arm64"]
 
   create_package = true
-  source_path    = "../dispatcher/main.pt"
+  source_path    = "../dispatcher/main.py"
   memory_size    = 128
   timeout        = 15
 
