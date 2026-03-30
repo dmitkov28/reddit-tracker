@@ -11,6 +11,3 @@ wheels/
 
 .coverage
 
-
-*.tfstate
-.terraform
