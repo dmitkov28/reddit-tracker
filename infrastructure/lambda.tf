@@ -46,3 +46,43 @@ module "fetcher-lambda-function" {
 
   tags = { "Terraform" : true }
 }
+
+
+module "dispatcher-lambda-function" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "8.7.0"
+
+  function_name = "reddit-tracker-dispatcher"
+  description   = "Reddit Tracker Dispatcher"
+  architectures = ["arm64"]
+
+  create_package = true
+  source_path    = "../dispatcher/main.pt"
+  memory_size    = 128
+  timeout        = 15
+
+  environment_variables = {
+    "BUCKET" = aws_s3_bucket.reddit-tracker-bucket.bucket
+  }
+
+  package_type = "Zip"
+
+  cloudwatch_logs_retention_in_days = 5
+
+  attach_policy_statements = true
+  policy_statements = {
+    bucket_read = {
+      effect = "Allow"
+      actions = [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ]
+      resources = [
+        aws_s3_bucket.reddit-tracker-bucket.arn,
+        "${aws_s3_bucket.reddit-tracker-bucket.arn}/*"
+      ]
+    }
+  }
+
+  tags = { "Terraform" : true }
+}
