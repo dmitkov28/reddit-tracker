@@ -9,7 +9,7 @@ logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
 
 def lambda_handler(event: dict, context: dict):
-    bucket = os.environ["BUCKET_NAME"]
+    bucket = os.environ["BUCKET"]
     key = "subreddits.json"
 
     logger.info("Reading config", extra={"bucket": bucket, "key": key})
