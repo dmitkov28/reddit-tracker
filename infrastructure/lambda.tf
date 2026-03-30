@@ -1,9 +1,9 @@
-module "lambda_function" {
+module "fetcher-lambda-function" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "8.7.0"
 
-  function_name = "reddit-tracker"
-  description   = "Reddit Tracker"
+  function_name = "reddit-tracker-fetcher"
+  description   = "Reddit Tracker Fetcher"
   architectures = ["arm64"]
 
   create_package = false
@@ -15,7 +15,7 @@ module "lambda_function" {
     "BUCKET"     = aws_s3_bucket.reddit-tracker-bucket.bucket
   }
 
-  image_uri    = "${module.reddit-tracker-ecr.repository_url}:latest" # managed separately
+  image_uri    = "${module.reddit-tracker-ecr.repository_url}:${var.image_tag}"
   package_type = "Image"
 
   ignore_source_code_hash = true
