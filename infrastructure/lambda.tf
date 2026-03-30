@@ -65,7 +65,8 @@ module "dispatcher-lambda-function" {
   handler = "main.lambda_handler"
 
   environment_variables = {
-    "BUCKET" = aws_s3_bucket.reddit-tracker-bucket.bucket
+    "BUCKET"  = aws_s3_bucket.reddit-tracker-bucket.bucket
+    "FETCHER" = module.fetcher-lambda-function.lambda_function_name
   }
 
   package_type = "Zip"
@@ -83,6 +84,15 @@ module "dispatcher-lambda-function" {
       resources = [
         aws_s3_bucket.reddit-tracker-bucket.arn,
         "${aws_s3_bucket.reddit-tracker-bucket.arn}/*"
+      ]
+    }
+    invoke_lambda = {
+      effect = "Allow"
+      actions = [
+        "lambda:InvokeFunction"
+      ]
+      resources = [
+        module.fetcher-lambda-function.lambda_function_arn
       ]
     }
   }
