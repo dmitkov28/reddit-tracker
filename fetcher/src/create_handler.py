@@ -24,7 +24,7 @@ def create_handler(storer: Storer = S3Storer(S3(bucket=BUCKET))):
 
         today = Today()
 
-        with httpx.Client(timeout=30, proxy=PROXY) as client:
+        with httpx.Client(timeout=30, proxy=PROXY, follow_redirects=True) as client:
             client = RedditClient(client=client)
 
             try:
