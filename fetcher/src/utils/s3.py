@@ -16,10 +16,14 @@ class S3:
             return None
 
     def put(self, key: str, data: dict | list) -> None:
+        if isinstance(data, list):
+            body = "\n".join(json.dumps(item) for item in data)
+        else:
+            body = json.dumps(data)
         self._client.put_object(
             Bucket=self._bucket,
             Key=key,
-            Body=json.dumps(data),
+            Body=body,
             ContentType="application/json",
         )
 

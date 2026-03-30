@@ -1,5 +1,4 @@
 from dataclasses import asdict, dataclass
-import json
 from typing import Optional
 from datetime import datetime
 
@@ -44,4 +43,4 @@ class CommentList:
 
     @property
     def serialized(self):
-        return "\n".join(json.dumps(asdict(comment)) for comment in self.data)
+        return [asdict(comment) for comment in self.data]
