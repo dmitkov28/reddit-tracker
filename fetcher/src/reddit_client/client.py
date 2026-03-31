@@ -43,12 +43,14 @@ class RedditClient:
         return [
             ThreadClean(
                 id=thread["data"]["id"],
+                subreddit=thread["data"]["subreddit"],
                 title=thread["data"]["title"],
                 selftext=thread["data"]["selftext"],
                 created=thread["data"]["created"],
                 author=thread["data"]["author"],
                 comments=thread["data"]["num_comments"],
                 upvotes=thread["data"]["ups"],
+                downvotes=thread["data"]["downs"],
                 permalink=thread["data"]["permalink"],
             )
             for thread in threads
