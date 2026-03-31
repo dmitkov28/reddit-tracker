@@ -35,6 +35,7 @@ def test_serialized_property(comment_list):
             "author": "test 1",
             "permalink": "test 1",
             "upvotes": 10,
+            "downvotes": 0,
         },
         {
             "created": 1774656000.0,
@@ -44,5 +45,6 @@ def test_serialized_property(comment_list):
             "author": "test 2",
             "permalink": "test 2",
             "upvotes": 10,
+            "downvotes": 0,
         },
     ]
