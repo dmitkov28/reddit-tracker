@@ -87,7 +87,7 @@ resource "aws_glue_catalog_table" "reddit-threads" {
     "projection.month.range"    = "1,12"
     "projection.day.type"       = "integer"
     "projection.day.range"      = "1,31"
-    "storage.location.template" = "s3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/threads/subreddit=$${subreddit}/year=$${year}/month=$${month}/day=$${day}/"
+    "storage.location.template" = "s3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/threads/year=$${year}/month=$${month}/day=$${day}/"
     "EXTERNAL"                  = "TRUE"
   }
 }
@@ -173,7 +173,7 @@ resource "aws_glue_catalog_table" "reddit-comments" {
     "projection.month.range"    = "1,12"
     "projection.day.type"       = "integer"
     "projection.day.range"      = "1,31"
-    "storage.location.template" = "s3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/comments/subreddit=$${subreddit}/year=$${year}/month=$${month}/day=$${day}/"
+    "storage.location.template" = "s3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/comments/year=$${year}/month=$${month}/day=$${day}/"
     "EXTERNAL"                  = "TRUE"
   }
 }
