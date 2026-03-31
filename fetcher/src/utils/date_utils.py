@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, date as _date
+from datetime import datetime, date as _date, timedelta
 
 
 @dataclass
@@ -8,6 +8,10 @@ class Today:
     month: int = datetime.now().month
     day: int = datetime.now().day
     date: _date = datetime.today().date()
+
+    @property
+    def two_days_ago(self):
+        return datetime.today() - timedelta(days=2)
 
     def __eq__(self, value: datetime) -> bool:
         return self.date == value.date()
