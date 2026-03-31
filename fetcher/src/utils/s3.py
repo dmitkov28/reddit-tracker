@@ -37,7 +37,7 @@ class ThreadPartition:
     day: int
 
     def __str__(self):
-        return f"threads/subreddit={self.subreddit}/year={self.year}/month={self.month}/day={self.day}/thread={self.thread_id}.json"
+        return f"threads/year={self.year}/month={self.month}/day={self.day}/thread={self.thread_id}.json"
 
 
 @dataclass
@@ -49,4 +49,4 @@ class CommentPartition:
     day: int
 
     def __str__(self):
-        return f"comments/subreddit={self.subreddit}/thread_id={self.thread_id}/year={self.year}/month={self.month}/day={self.day}/comments.json"
+        return f"comments/year={self.year}/month={self.month}/day={self.day}/{self.thread_id}.json"
