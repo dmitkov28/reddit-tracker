@@ -50,3 +50,14 @@ class CommentPartition:
 
     def __str__(self):
         return f"comments/year={self.year}/month={self.month}/day={self.day}/{self.thread_id}.json"
+
+
+@dataclass
+class SubredditPartition:
+    subreddit_id: str
+    year: int
+    month: int
+    day: int
+
+    def __str__(self):
+        return f"subreddits/year={self.year}/month={self.month}/day={self.day}/{self.subreddit_id}.json"
