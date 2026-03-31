@@ -61,6 +61,8 @@ def _thread_child(
     author="a",
     num_comments=0,
     ups=0,
+    downs=0,
+    subreddit="Test",
     permalink="/r/test",
 ):
     return {
@@ -73,6 +75,8 @@ def _thread_child(
             "author": author,
             "num_comments": num_comments,
             "ups": ups,
+            "downs": downs,
+            "subreddit": subreddit,
             "permalink": permalink,
         },
     }
@@ -117,12 +121,14 @@ def _comment_child(
             [
                 ThreadClean(
                     id="1",
+                    subreddit="Test",
                     title="First",
                     selftext="",
                     created=1.0,
                     author="a",
                     comments=0,
                     upvotes=10,
+                    downvotes=0,
                     permalink="/r/test",
                 )
             ],
@@ -132,22 +138,26 @@ def _comment_child(
             [
                 ThreadClean(
                     id="1",
+                    subreddit="Test",
                     title="t",
                     selftext="",
                     created=1.0,
                     author="a",
                     comments=0,
                     upvotes=0,
+                    downvotes=0,
                     permalink="/r/test",
                 ),
                 ThreadClean(
                     id="2",
+                    subreddit="Test",
                     title="t",
                     selftext="",
                     created=1.0,
                     author="b",
                     comments=0,
                     upvotes=0,
+                    downvotes=0,
                     permalink="/r/test",
                 ),
             ],
@@ -344,12 +354,14 @@ def test_fetch_threads_for_subreddit():
         ThreadClean(
             created=1769565254.0,
             id="1qoxwdt",
+            subreddit="programming",
             title="State of the Subreddit (January 2027): Mods applications and rules updates",
             selftext="test",
             author="ketralnis",
             permalink="/r/programming/comments/1qoxwdt/state_of_the_subreddit_january_2027_mods/",
             comments=91,
             upvotes=123,
+            downvotes=0,
         )
     ]
 
