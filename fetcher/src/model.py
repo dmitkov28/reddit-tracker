@@ -19,12 +19,14 @@ class BaseEntity:
 @dataclass
 class ThreadClean(BaseEntity):
     id: str
+    subreddit: str
     title: str
     selftext: Optional[str]
     author: str
     permalink: str
     comments: Optional[int] = 0
     upvotes: Optional[int] = 0
+    downvotes: Optional[int] = 0
 
 
 @dataclass
