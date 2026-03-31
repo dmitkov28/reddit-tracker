@@ -85,14 +85,38 @@ class RedditClient:
             created=response["data"]["created"],
         )
 
-    def fetch_threads_for_subreddit(self, subreddit: str, limit: int = 100):
+    def fetch_threads_for_subreddit(
+        self, subreddit: str, limit: int = 100, today: Today = Today()
+    ):
         url = self._build_thread_url(subreddit=subreddit)
         logger.info(f"Fetching {url}")
-        res = self._http.get(url=url, params={"limit": limit}, headers=self._headers)
-        logger.info(f"Status: {res.status_code}")
+        all_threads: list[ThreadClean] = []
+        after = None
+        while True:
+            after, threads = self._fetch_threads_for_subreddit(
+                subreddit=subreddit, after=after, limit=limit
+            )
+            all_threads.extend(threads)
+            if threads[-1].created_dt <= today.two_days_ago:
+                return all_threads
+
+            if not after:
+                return all_threads
+
+    def _fetch_threads_for_subreddit(
+        self, subreddit: str, limit: int = 100, after: Optional[str] = None
+    ):
+        url = self._build_thread_url(subreddit=subreddit)
+        params: dict = {"limit": limit}
+        if after:
+            params["after"] = after
+
+        res = self._http.get(url=url, params=params, headers=self._headers)
         res.raise_for_status()
         res_json: RedditThreadResponse = res.json()
-        return self._process_threads(response=res_json)
+        after = res_json.get("data", {}).get("after")
+
+        return after, self._process_threads(response=res_json)
 
     def fetch_comments_for_subreddit(
         self, subreddit: str, limit: int = 100, today: Today = Today()
@@ -103,10 +127,13 @@ class RedditClient:
         after = None
         while True:
             after, comments = self._fetch_comments_for_subreddit(
-                subreddit=subreddit, after=after
+                subreddit=subreddit, after=after, limit=limit
             )
             all_comments.extend(comments)
-            if comments[-1].created_dt != today:
+            if comments[-1].created_dt <= today.two_days_ago:
+                return all_comments
+
+            if not after:
                 return all_comments
 
     def _fetch_comments_for_subreddit(
