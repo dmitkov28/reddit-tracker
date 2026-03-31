@@ -18,6 +18,7 @@ class BaseEntity:
 
 @dataclass
 class Subreddit(BaseEntity):
+    id: str
     name: str
     subscribers: int
 
