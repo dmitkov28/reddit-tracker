@@ -1,10 +1,11 @@
 from typing import Optional
 import httpx
 
+from src._types._subreddit import RedditSubredditResponse
 from src.utils.date_utils import Today
 from src._types import RedditThreadResponse
 from src._types._comments import RedditCommentResponse
-from src.model import Comment, ThreadClean
+from src.model import Comment, Subreddit, ThreadClean
 from src.logger import logger
 
 
@@ -19,6 +20,9 @@ class RedditClient:
 
     def _build_comments_url(self, subreddit: str) -> str:
         return f"{self.base_url}/r/{subreddit}/comments.json"
+
+    def _build_subreddit_url(self, subreddit: str) -> str:
+        return f"{self.base_url}/r/{subreddit}/about.json"
 
     @property
     def _headers(self) -> dict:
@@ -73,6 +77,14 @@ class RedditClient:
             for comment in comments
         ]
 
+    def _process_subreddit(self, response: RedditSubredditResponse):
+        return Subreddit(
+            id=response["data"]["id"],
+            name=response["data"]["name"],
+            subscribers=response["data"]["subscribers"],
+            created=response["data"]["created"],
+        )
+
     def fetch_threads_for_subreddit(self, subreddit: str, limit: int = 100):
         url = self._build_thread_url(subreddit=subreddit)
         logger.info(f"Fetching {url}")
@@ -111,3 +123,12 @@ class RedditClient:
         after = res_json.get("data", {}).get("after")
 
         return after, self._process_comments(response=res_json)
+
+    def fetch_subreddit_metadata(self, subreddit: str):
+        url = self._build_subreddit_url(subreddit=subreddit)
+        logger.info(f"Fetching {url}")
+        res = self._http.get(url=url, headers=self._headers)
+        logger.info(f"Status: {res.status_code}")
+        res.raise_for_status()
+        res_json: RedditSubredditResponse = res.json()
+        return self._process_subreddit(response=res_json)
