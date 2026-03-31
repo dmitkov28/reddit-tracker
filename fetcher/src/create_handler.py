@@ -2,9 +2,7 @@ import os
 
 import httpx
 
-from src.services.subreddits import collect_subreddit
-from src.services.comments import collect_comments
-from src.services.threads import collect_threads
+from src.services import collect_subreddit, collect_comments, collect_threads
 from src import RedditClient
 from src.storer import S3Storer
 from src.storer.storer import Storer
