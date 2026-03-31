@@ -17,6 +17,12 @@ class BaseEntity:
 
 
 @dataclass
+class Subreddit(BaseEntity):
+    name: str
+    subscribers: int
+
+
+@dataclass
 class ThreadClean(BaseEntity):
     id: str
     subreddit: str
