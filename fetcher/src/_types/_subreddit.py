@@ -1,0 +1,112 @@
+from __future__ import annotations
+
+from typing import TypedDict, Any
+
+
+class RedditSubredditResponse(TypedDict):
+    kind: str
+    data: Data
+
+
+class Data(TypedDict):
+    user_flair_background_color: None
+    submit_text_html: None
+    restrict_posting: bool
+    user_is_banned: None
+    free_form_reports: bool
+    wiki_enabled: bool
+    user_is_muted: None
+    user_can_flair_in_sr: None
+    display_name: str
+    header_img: str
+    title: str
+    original_content_tag_enabled: bool
+    allow_galleries: bool
+    icon_size: None
+    primary_color: str
+    icon_img: str
+    display_name_prefixed: str
+    public_traffic: bool
+    subscribers: int
+    user_flair_richtext: list[Any]
+    name: str
+    quarantine: bool
+    hide_ads: bool
+    prediction_leaderboard_entry_type: int
+    emojis_enabled: bool
+    advertiser_category: str
+    public_description: str
+    comment_score_hide_mins: int
+    allow_predictions: bool
+    user_has_favorited: None
+    user_flair_template_id: None
+    community_icon: str
+    banner_background_image: str
+    header_title: str
+    community_reviewed: bool
+    submit_text: str
+    description_html: str
+    spoilers_enabled: bool
+    comment_contribution_settings: CommentContributionSettings
+    allow_talks: bool
+    header_size: list[int]
+    user_flair_position: str
+    all_original_content: bool
+    has_menu_widget: bool
+    is_enrolled_in_new_modmail: None
+    key_color: str
+    can_assign_user_flair: bool
+    created: float
+    wls: int
+    show_media_preview: bool
+    submission_type: str
+    user_is_subscriber: None
+    allowed_media_in_comments: list[Any]
+    allow_videogifs: bool
+    should_archive_posts: bool
+    user_flair_type: str
+    allow_polls: bool
+    collapse_deleted_comments: bool
+    emojis_custom_size: None
+    public_description_html: str
+    allow_videos: bool
+    is_crosspostable_subreddit: bool
+    notification_level: None
+    should_show_media_in_comments_setting: bool
+    can_assign_link_flair: bool
+    allow_prediction_contributors: bool
+    submit_text_label: str
+    link_flair_position: str
+    user_sr_flair_enabled: None
+    user_flair_enabled_in_sr: bool
+    allow_discovery: bool
+    accept_followers: bool
+    user_sr_theme_enabled: bool
+    link_flair_enabled: bool
+    disable_contributor_requests: bool
+    subreddit_type: str
+    suggested_comment_sort: None
+    banner_img: str
+    user_flair_text: None
+    banner_background_color: str
+    show_media: bool
+    id: str
+    user_is_moderator: None
+    over18: bool
+    description: str
+    submit_link_label: str
+    user_flair_text_color: None
+    restrict_commenting: bool
+    user_flair_css_class: None
+    allow_images: bool
+    lang: str
+    url: str
+    created_utc: float
+    banner_size: None
+    mobile_banner_image: str
+    user_is_contributor: None
+    allow_predictions_tournament: bool
+
+
+class CommentContributionSettings(TypedDict):
+    allowed_media_types: None
