@@ -8,6 +8,7 @@ class CommentData(TypedDict):
     link_id: str
     permalink: str
     ups: int
+    downs: int
     body: str
     created: float
     author: str
