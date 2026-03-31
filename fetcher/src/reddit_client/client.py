@@ -80,7 +80,7 @@ class RedditClient:
     def _process_subreddit(self, response: RedditSubredditResponse):
         return Subreddit(
             id=response["data"]["id"],
-            name=response["data"]["name"],
+            name=response["data"]["display_name_prefixed"],
             subscribers=response["data"]["subscribers"],
             created=response["data"]["created"],
         )
