@@ -65,6 +65,7 @@ class RedditClient:
                 thread_id=comment["data"]["link_id"].removeprefix("t3_"),
                 permalink=comment["data"]["permalink"],
                 upvotes=comment["data"]["ups"],
+                downvotes=comment["data"].get("downs", 0),
                 text=comment["data"]["body"],
                 created=comment["data"]["created"],
                 author=comment["data"]["author"],

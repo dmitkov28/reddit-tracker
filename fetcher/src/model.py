@@ -37,6 +37,7 @@ class Comment(BaseEntity):
     author: str
     permalink: str
     upvotes: Optional[int] = 0
+    downvotes: Optional[int] = 0
 
 
 @dataclass
