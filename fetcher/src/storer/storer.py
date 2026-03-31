@@ -1,14 +1,14 @@
 from typing import Protocol, Union
 
-from src.model import CommentList, ThreadClean
-from src.utils.s3 import S3, CommentPartition, ThreadPartition
+from src.model import CommentList, Subreddit, ThreadClean
+from src.utils.s3 import S3, CommentPartition, SubredditPartition, ThreadPartition
 
 
 class Storer(Protocol):
     def store(
         self,
-        partition: Union[ThreadPartition, CommentPartition],
-        data: Union[ThreadClean, CommentList],
+        partition: Union[ThreadPartition, CommentPartition, SubredditPartition],
+        data: Union[ThreadClean, CommentList, Subreddit],
     ): ...
 
 
@@ -18,7 +18,7 @@ class S3Storer(Storer):
 
     def store(
         self,
-        partition: Union[ThreadPartition, CommentPartition],
-        data: Union[ThreadClean, CommentList],
+        partition: Union[ThreadPartition, CommentPartition, SubredditPartition],
+        data: Union[ThreadClean, CommentList, Subreddit],
     ):
         self._s3.put(key=str(partition), data=data.serialized)
