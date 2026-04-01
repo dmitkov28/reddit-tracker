@@ -15,9 +15,11 @@ class S3:
         except self._client.exceptions.NoSuchKey:
             return None
 
-    def put(self, key: str, data: dict | list) -> None:
+    def put(self, key: str, data: dict | list | None) -> None:
         if isinstance(data, list):
             body = "\n".join(json.dumps(item) for item in data)
+        elif not data:
+            body = b""
         else:
             body = json.dumps(data)
         self._client.put_object(
