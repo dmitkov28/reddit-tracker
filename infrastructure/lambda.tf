@@ -151,7 +151,9 @@ module "transformer-lambda-function" {
         "glue:GetPartitions"
       ]
       resources = [
-        aws_glue_catalog_database.reddit.arn
+        "arn:aws:glue:eu-central-1:${data.aws_caller_identity.current.account_id}:catalog",
+        aws_glue_catalog_database.reddit.arn,
+        "arn:aws:glue:eu-central-1:${data.aws_caller_identity.current.account_id}:table/${aws_glue_catalog_database.reddit.name}/*"
       ]
     }
     athena_query = {
