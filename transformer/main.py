@@ -99,6 +99,12 @@ def lambda_handler(event: dict, context: dict):
             QueryString=unload_query,
             QueryExecutionContext={"Database": DATABASE},
             ResultConfiguration={"OutputLocation": OUTPUT},
+            ResultReuseConfiguration={
+                "ResultReuseByAgeConfiguration": {
+                    "Enabled": True,
+                    "MaxAgeInMinutes": 60,
+                }
+            },
         )
         query_id = response["QueryExecutionId"]
         logger.info(
