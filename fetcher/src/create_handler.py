@@ -38,7 +38,11 @@ def create_handler(storer: Storer = S3Storer(S3(bucket=BUCKET))):
                 collect_subreddit(
                     reddit_client=client, storer=storer, subreddit=subreddit
                 )
+
             except Exception as e:
                 logger.exception(str(e))
+
+            finally:
+                storer.store_sentinel()
 
     return handler
