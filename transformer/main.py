@@ -14,7 +14,6 @@ FROM subreddits
 WHERE year = year(CURRENT_DATE)
   AND month = month(CURRENT_DATE)
   AND day = day(CURRENT_DATE)
-  AND CAST(from_unixtime(created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY
 """
 
 COMMENTS_QUERY = """
@@ -31,7 +30,7 @@ FROM comments
 WHERE year = year(CURRENT_DATE)
   AND month = month(CURRENT_DATE)
   AND day = day(CURRENT_DATE)
-  AND CAST(from_unixtime(created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY;
+  AND CAST(from_unixtime(created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY
 """
 
 THREADS_QUERY = """
