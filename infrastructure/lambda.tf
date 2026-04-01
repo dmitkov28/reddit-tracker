@@ -47,7 +47,6 @@ module "fetcher-lambda-function" {
   tags = { "Terraform" : true }
 }
 
-
 module "dispatcher-lambda-function" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "8.7.0"
@@ -58,6 +57,8 @@ module "dispatcher-lambda-function" {
 
   create_package = true
   source_path    = "../dispatcher/main.py"
+  trigger_on_package_timestamp = false
+
   memory_size    = 128
   timeout        = 15
 
