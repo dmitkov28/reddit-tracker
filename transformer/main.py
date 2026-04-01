@@ -61,13 +61,11 @@ def build_unload_query(
 ):
     return f"""
         UNLOAD ({query})
-        TO {output_path}
-        WITH 
-            (
-                {output_format},
-                COMPRESSION = {output_compression}
-            
-            )
+        TO '{output_path}'
+        WITH (
+            format = '{output_format}',
+            compression = '{output_compression}'
+        )
     """
 
 
