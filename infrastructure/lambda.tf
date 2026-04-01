@@ -130,7 +130,7 @@ module "transformer-lambda-function" {
 
   attach_policy_statements = true
   policy_statements = {
-    bucket_read = {
+    bucket_permissions = {
       effect = "Allow"
       actions = [
         "s3:GetObject",
