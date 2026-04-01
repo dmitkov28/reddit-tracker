@@ -12,7 +12,8 @@ SELECT
 FROM subreddits
 WHERE year = year(CURRENT_DATE)
   AND month = month(CURRENT_DATE)
-  AND day = day(CURRENT_DATE);
+  AND day = day(CURRENT_DATE)
+  AND CAST(from_unixtime(created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY
 """
 
 COMMENTS_QUERY = """
@@ -28,11 +29,12 @@ SELECT
 FROM comments
 WHERE year = year(CURRENT_DATE)
   AND month = month(CURRENT_DATE)
-  AND day = day(CURRENT_DATE);
+  AND day = day(CURRENT_DATE)
+  AND CAST(from_unixtime(created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY;
 """
 
 THREADS_QUERY = """
-SELECT 
+    SELECT 
     id,
     title,
     selftext AS text,
@@ -45,7 +47,8 @@ SELECT
 FROM reddit.threads
 WHERE year = year(CURRENT_DATE)
   AND month = month(CURRENT_DATE)
-  AND day = day(CURRENT_DATE);
+  AND day = day(CURRENT_DATE)
+  AND CAST(from_unixtime(created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY
 """
 
 
