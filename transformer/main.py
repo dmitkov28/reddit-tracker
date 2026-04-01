@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import os
+from typing import Literal
 
 import boto3
 
@@ -52,6 +53,24 @@ WHERE year = year(CURRENT_DATE)
 """
 
 
+def build_unload_query(
+    query: str,
+    output_path: str,
+    output_format: Literal["PARQUET", "JSON", "CSV"] = "PARQUET",
+    output_compression: Literal["SNAPPY", "ZSTD", "BROTLI", "GZIP"] = "SNAPPY",
+):
+    return f"""
+        UNLOAD ({query})
+        TO {output_path}
+        WITH 
+            (
+                {output_format},
+                COMPRESSION = {output_compression}
+            
+            )
+    """
+
+
 logger = logging.getLogger()
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
@@ -75,8 +94,9 @@ def lambda_handler(event: dict, context: dict):
     ]
 
     for name, query in queries:
+        unload_query = build_unload_query(query, output_path=f"{OUTPUT}/{name}/")
         response = athena_client.start_query_execution(
-            QueryString=query,
+            QueryString=unload_query,
             QueryExecutionContext={"Database": DATABASE},
             ResultConfiguration={"OutputLocation": OUTPUT},
         )
