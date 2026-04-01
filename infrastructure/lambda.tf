@@ -55,12 +55,12 @@ module "dispatcher-lambda-function" {
   description   = "Reddit Tracker Dispatcher"
   architectures = ["arm64"]
 
-  create_package = true
-  source_path    = "../dispatcher/main.py"
+  create_package               = true
+  source_path                  = "../dispatcher/main.py"
   trigger_on_package_timestamp = false
 
-  memory_size    = 128
-  timeout        = 15
+  memory_size = 128
+  timeout     = 15
 
   runtime = "python3.13"
   handler = "main.lambda_handler"
@@ -109,12 +109,12 @@ module "transformer-lambda-function" {
   description   = "Reddit Tracker Transformer"
   architectures = ["arm64"]
 
-  create_package = true
-  source_path    = "../transformer/main.py"
+  create_package               = true
+  source_path                  = "../transformer/main.py"
   trigger_on_package_timestamp = false
-  
-  memory_size    = 128
-  timeout        = 15
+
+  memory_size = 128
+  timeout     = 15
 
   runtime = "python3.13"
   handler = "main.lambda_handler"
