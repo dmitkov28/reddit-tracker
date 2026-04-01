@@ -20,6 +20,20 @@ resource "aws_s3_bucket_lifecycle_configuration" "reddit-tracker-bucket-lifecycl
   }
 
   rule {
+    id = "expire-raw-subreddits-after-14-days"
+
+    status = "Enabled"
+
+    filter {
+      prefix = "subreddits/"
+    }
+
+    expiration {
+      days = 14
+    }
+  }
+
+  rule {
     id = "expire-raw-comments-after-14-days"
 
     status = "Enabled"
