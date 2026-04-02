@@ -1,5 +1,6 @@
 name: Make DB migration
 on:
+    workflow_dispatch:
     push:
         paths:
             - "db_schema/migrations/**"
