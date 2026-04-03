@@ -170,3 +170,51 @@ module "transformer-lambda-function" {
 
   tags = { "Terraform" : true }
 }
+
+
+module "loader-lambda-function" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "8.7.0"
+
+  function_name = "reddit-tracker-loader"
+  description   = "Reddit Tracker Loader"
+  architectures = ["arm64"]
+  image_uri = "${module.reddit-tracker-loader-ecr.repository_url}:latest"
+
+  create_package = false
+
+  memory_size = 512
+  timeout     = 60
+
+  environment_variables = {
+    "BUCKET"  = aws_s3_bucket.reddit-tracker-bucket.bucket
+    "PG_HOST" = var.pg_host
+    "PG_DB"   = var.pg_db
+    "PG_USER" = var.pg_user
+    "PG_PASS" = var.pg_pass
+  }
+
+  package_type = "Image"
+
+  cloudwatch_logs_retention_in_days = 5
+
+  attach_policy_statements = true
+  policy_statements = {
+    bucket_permissions = {
+      effect = "Allow"
+      actions = [
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:PutObject",
+        "s3:GetBucketLocation"
+      ]
+      resources = [
+        aws_s3_bucket.reddit-tracker-bucket.arn,
+        "${aws_s3_bucket.reddit-tracker-bucket.arn}/*"
+      ]
+    }
+
+  }
+
+  tags = { "Terraform" : true }
+}
