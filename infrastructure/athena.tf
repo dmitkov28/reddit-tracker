@@ -32,3 +32,28 @@ resource "aws_athena_named_query" "threads_named_query" {
   )
 }
 
+resource "aws_athena_named_query" "comments_named_query" {
+  name      = "LastTwoDaysComments"
+  database  = aws_glue_catalog_database.reddit.name
+  workgroup = aws_athena_workgroup.athena_wg.id
+
+  query = trimspace(<<-SQL
+    SELECT 
+      id,
+      thread_id,
+      text,
+      author,
+      permalink,
+      upvotes,
+      downvotes,
+      CAST(from_unixtime(created) AS DATE) AS created_date
+    FROM comments
+    WHERE year = year(CURRENT_DATE)
+      AND month = month(CURRENT_DATE)
+      AND day = day(CURRENT_DATE)
+      AND CAST(from_unixtime(created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY
+  SQL
+  )
+}
+
+
