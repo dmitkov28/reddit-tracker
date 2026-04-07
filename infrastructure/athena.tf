@@ -7,3 +7,28 @@ resource "aws_athena_workgroup" "athena_wg" {
   }
 }
 
+resource "aws_athena_named_query" "threads_named_query" {
+  name      = "LastTwoDaysFetchedThreads"
+  database  = aws_glue_catalog_database.reddit.name
+  workgroup = aws_athena_workgroup.athena_wg.id
+
+  query = trimspace(<<-SQL
+    SELECT 
+      id,
+      title,
+      selftext AS text,
+      author,
+      permalink,
+      comments,
+      upvotes,
+      downvotes,
+      CAST(from_unixtime(created) AS DATE) AS created_date
+    FROM reddit.threads
+    WHERE year = year(CURRENT_DATE)
+      AND month = month(CURRENT_DATE)
+      AND day = day(CURRENT_DATE)
+      AND CAST(from_unixtime(created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY
+  SQL
+  )
+}
+
