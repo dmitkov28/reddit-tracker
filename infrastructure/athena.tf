@@ -57,3 +57,21 @@ resource "aws_athena_named_query" "comments_named_query" {
 }
 
 
+resource "aws_athena_named_query" "subreddits_named_query" {
+  name      = "TodaySubreddits"
+  database  = aws_glue_catalog_database.reddit.name
+  workgroup = aws_athena_workgroup.athena_wg.id
+
+  query = trimspace(<<-SQL
+    SELECT 
+      id,
+      name,
+      subscribers
+    FROM subreddits
+    WHERE year = year(CURRENT_DATE)
+      AND month = month(CURRENT_DATE)
+      AND day = day(CURRENT_DATE)
+  SQL
+  )
+}
+
