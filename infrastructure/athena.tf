@@ -92,23 +92,21 @@ resource "aws_athena_named_query" "subreddits_named_query" {
         SELECT 
             id,
             name,
-            subscribers
+            subscribers,
+            year(current_date) AS year,
+            month(current_date) AS month,
+            day(current_date) AS day
         FROM subreddits
         WHERE year = year(current_date)
           AND month = month(current_date)
           AND day = day(current_date)
       )
-      TO CONCAT(
-        's3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/athena/',
-        date_format(current_date, '%m-%d-%Y'),
-        '/subreddits/',
-        date_format(current_timestamp, '%H-%i-%s'),
-        '/'
-      )
-      WITH (
-        format = 'PARQUET',
-        compression = 'SNAPPY'
-      );
+    TO 's3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/athena/subreddits'
+    WITH (
+      format = 'PARQUET',
+      compression = 'SNAPPY',
+      partitioned_by = ARRAY['year', 'month', 'day']
+    );
   SQL
   )
 }
