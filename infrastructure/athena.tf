@@ -23,22 +23,20 @@ resource "aws_athena_named_query" "threads_named_query" {
         comments,
         upvotes,
         downvotes,
-        CAST(from_unixtime(created) AS DATE) AS created_date
+        CAST(from_unixtime(created) AS DATE) AS created_date,
+        year,
+        month,
+        day
       FROM reddit.threads
       WHERE year = year(CURRENT_DATE)
         AND month = month(CURRENT_DATE)
         AND day = day(CURRENT_DATE)
         AND CAST(from_unixtime(created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY
-    ) TO CONCAT(
-        's3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/athena/',
-        date_format(current_date, '%m-%d-%Y'),
-        '/threads/',
-        date_format(current_timestamp, '%H-%i-%s'),
-        '/'
-      )
+    ) TO 's3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/athena/threads/'
       WITH (
         format = 'PARQUET',
-        compression = 'SNAPPY'
+        compression = 'SNAPPY',
+        partitioned_by = ARRAY['year', 'month', 'day']
       );
   SQL
   )
