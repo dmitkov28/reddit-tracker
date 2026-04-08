@@ -61,7 +61,7 @@ resource "aws_athena_named_query" "comments_named_query" {
         year,
         month,
         day
-    FROM comments
+    FROM reddit.comments
     WHERE year = year(CURRENT_DATE)
       AND month = month(CURRENT_DATE)
       AND day = day(CURRENT_DATE)
@@ -92,7 +92,7 @@ resource "aws_athena_named_query" "subreddits_named_query" {
             year(current_date) AS year,
             month(current_date) AS month,
             day(current_date) AS day
-        FROM subreddits
+        FROM reddit.subreddits
         WHERE year = year(current_date)
           AND month = month(current_date)
           AND day = day(current_date)
