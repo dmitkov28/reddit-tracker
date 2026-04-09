@@ -17,4 +17,4 @@ def build_path(
     date: Date = Date(),
 ) -> str:
 
-    return f"s3://{bucket}/{athena_dir}/{query_type}/year={date.year}/month={date.month}/day={date.day}"
+    return f"s3://{bucket}/{athena_dir}/{query_type}/year={date.year}/month={date.month}/day={date.day}/*"
