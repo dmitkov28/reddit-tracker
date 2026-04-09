@@ -1,8 +1,12 @@
+from dataclasses import dataclass
 from datetime import datetime
 
 
-def current_date(today: datetime = datetime.now()) -> str:
-    return today.strftime("%d-%m-%Y")
+@dataclass
+class Date:
+    year: int = datetime.today().year
+    month: int = datetime.today().month
+    day: int = datetime.today().day
 
 
 def build_path(bucket: str, athena_dir: str, date_dir: str = current_date()) -> str:
