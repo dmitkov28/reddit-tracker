@@ -3,7 +3,7 @@ import os
 from pydantic import SecretStr
 
 from src.dependencies import PGConnection, get_duckdb_connection
-from src import services
+from src.services import get_service
 from src.utils import build_path
 
 
@@ -23,14 +23,16 @@ def create_handler():
     ddb = get_duckdb_connection(pg_conn=pg_conn)
 
     def handler(event: dict, context: dict):
-        s3 = event["Records"][0]["s3"]
-        src_obj_key = s3["object"]["key"]
+        query_type = event.get("query_type")
+        if not query_type:
+            raise ValueError("Invalid query type")
 
-        path = build_path(bucket=BUCKET, athena_dir="athena")
+        service = get_service(query_type=query_type)
+        service(
+            ddb=ddb,
+            src_path=build_path(
+                bucket=BUCKET, athena_dir="athena", query_type=query_type
+            ),
+        )
 
-        if path + "/subreddits" in src_obj_key:
-            services.upsert_subreddits(ddb=ddb, src_path=path + "/subreddits/*")
-            services.upsert_subreddit_subscribers(
-                ddb=ddb, src_path=path + "/subreddits/*"
-            )
     return handler
