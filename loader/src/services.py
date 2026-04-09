@@ -58,6 +58,7 @@ def upsert_threads(ddb: DuckDBPyConnection, src_path: str):
         comments,
         upvotes,
         downvotes,
+        subreddit,
         created_date
     FROM read_parquet(?)
     """,
@@ -70,18 +71,17 @@ def upsert_threads(ddb: DuckDBPyConnection, src_path: str):
         """
     INSERT INTO pg.public.threads (id, title, text, author, permalink, comments, upvotes, downvotes, subreddit, created_date)
     SELECT
-        t.id,
-        t.title,
-        t.text,
-        t.author,
-        t.permalink,
-        t.comments,
-        t.upvotes,
-        t.downvotes,
-        s.id,
-        t.created_date
-    FROM threads AS t
-    JOIN subreddits AS s ON s.name = TRIM(SPLIT_PART(t.permalink, 'comments', 1), '/')
+        id,
+        title,
+        text,
+        author,
+        permalink,
+        comments,
+        upvotes,
+        downvotes,
+        subreddit,
+        created_date
+    FROM threads
     ON CONFLICT DO NOTHING
     """
     )
