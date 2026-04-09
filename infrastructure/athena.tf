@@ -14,30 +14,33 @@ resource "aws_athena_named_query" "threads_named_query" {
 
   query = trimspace(<<-SQL
     UNLOAD (
-      SELECT 
-        id,
-        title,
-        selftext AS text,
-        author,
-        permalink,
-        comments,
-        upvotes,
-        downvotes,
-        CAST(from_unixtime(created) AS DATE) AS created_date,
-        year,
-        month,
-        day
-      FROM reddit.threads
-      WHERE year = year(CURRENT_DATE)
-        AND month = month(CURRENT_DATE)
-        AND day = day(CURRENT_DATE)
-        AND CAST(from_unixtime(created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY
-    ) TO 's3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/athena/threads/'
-      WITH (
-        format = 'PARQUET',
-        compression = 'SNAPPY',
-        partitioned_by = ARRAY['year', 'month', 'day']
-      );
+ SELECT 
+    DISTINCT(rt.id),
+    rt.title,
+    rt.selftext AS text,
+    rt.author,
+    rt.permalink,
+    rt.comments,
+    rt.upvotes,
+    rt.downvotes,
+    CAST(from_unixtime(rt.created) AS DATE) AS created_date,
+    rs.id AS subreddit,
+    rt.year,
+    rt.month,
+    rt.day
+  FROM reddit.threads AS rt
+  JOIN reddit.subreddits AS rs
+    ON REGEXP_EXTRACT(rt.permalink, 'r/[^/]+') = rs.name
+  WHERE rt.year = year(CURRENT_DATE)
+    AND rt.month = month(CURRENT_DATE)
+    AND rt.day = day(CURRENT_DATE)
+    AND CAST(from_unixtime(rt.created) AS DATE) >= CURRENT_DATE - INTERVAL '2' DAY
+) TO 's3://rt-reddit-tracker-bucket/athena/threads/'
+  WITH (
+    format = 'PARQUET',
+    compression = 'SNAPPY',
+    partitioned_by = ARRAY['year', 'month', 'day']
+  );
   SQL
   )
 }
