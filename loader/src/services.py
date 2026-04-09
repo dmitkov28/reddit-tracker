@@ -1,3 +1,5 @@
+from typing import Literal
+
 from duckdb import DuckDBPyConnection
 
 
@@ -12,32 +14,120 @@ def upsert_subreddits(ddb: DuckDBPyConnection, src_path: str):
 
 
 def upsert_subreddit_subscribers(ddb: DuckDBPyConnection, src_path: str):
-    return ddb.execute(
+
+    subreddits = ddb.query(
         """
-    INSERT INTO pg.public.subreddit_subscribers (subreddit_id, subscriber_count)
-    SELECT id, subscribers FROM read_parquet(?)
+    SELECT 
+        DISTINCT(id),
+        name,
+        subscribers,
+        MAKE_DATE(year, month, day) AS date
+    FROM read_parquet(?)
+    ORDER BY date DESC
     """,
-        parameters=[src_path],
+        params=[src_path],
+    )
+
+    ddb.register("subreddits", subreddits)
+
+    ddb.execute(
+        """
+    INSERT INTO pg.public.subreddit_subscribers(subreddit_id, subscriber_count, date)
+       SELECT 
+           id AS subreddit_id, 
+           subscribers AS subscriber_count, 
+           date 
+       FROM subreddits
+       WHERE (id, date) NOT IN (
+           SELECT subreddit_id, date 
+           FROM pg.public.subreddit_subscribers
+       );
+    """
     )
 
 
-def upsert_threads(ddb: DuckDBPyConnection):
-    return ddb.execute(
+def upsert_threads(ddb: DuckDBPyConnection, src_path: str):
+    threads = ddb.query(
+        """
+    SELECT
+        DISTINCT(id),
+        title,
+        text,
+        author,
+        permalink,
+        comments,
+        upvotes,
+        downvotes,
+        created_date
+    FROM read_parquet(?)
+    """,
+        params=[src_path],
+    )
+
+    ddb.register("threads", threads)
+
+    ddb.query(
         """
     INSERT INTO pg.public.threads (id, title, text, author, permalink, comments, upvotes, downvotes, subreddit, created_date)
     SELECT
-        t.id, t.title, t.text, t.author, t.permalink, t.comments, t.upvotes, t.downvotes,
-        s.id, t.created_date
-    FROM read_parquet(?) AS t
-    JOIN read_parquet(?) AS s
-        ON s.name = TRIM(SPLIT_PART(t.permalink, 'comments', 1), '/')
-    ON CONFLICT DO NOTHING;
-    """,
-        parameters=[
-            "s3://rt-reddit-tracker-bucket/athena/looker/threads/*",
-            "s3://rt-reddit-tracker-bucket/athena/looker/subreddits/*",
-        ],
+        t.id,
+        t.title,
+        t.text,
+        t.author,
+        t.permalink,
+        t.comments,
+        t.upvotes,
+        t.downvotes,
+        s.id,
+        t.created_date
+    FROM threads AS t
+    JOIN subreddits AS s ON s.name = TRIM(SPLIT_PART(t.permalink, 'comments', 1), '/')
+    ON CONFLICT DO NOTHING
+    """
     )
 
 
-def upsert_comments(ddb: DuckDBPyConnection): ...
+def upsert_comments(ddb: DuckDBPyConnection, src_path: str):
+    comments = ddb.query(
+        """
+    SELECT
+        DISTINCT(id),
+        thread_id,
+        text,
+        author,
+        permalink,
+        upvotes,
+        downvotes,
+        created_date
+    FROM read_parquet(?)
+    """,
+        params=[src_path],
+    )
+
+    ddb.register("comments", comments)
+
+    ddb.query(
+        """
+    INSERT INTO pg.public.comments (id, thread_id, text, author, permalink, upvotes, downvotes, created_date)
+    SELECT
+        id,
+        thread_id,
+        text,
+        author,
+        permalink,
+        upvotes,
+        downvotes,
+        created_date
+    FROM comments
+    ON CONFLICT DO NOTHING
+    """
+    )
+
+
+def get_service(query_type: Literal["subreddits", "threads", "comments"]):
+    services = {
+        "subreddits": upsert_subreddit_subscribers,
+        "threads": upsert_threads,
+        "comments": upsert_comments,
+    }
+    return services[query_type]
