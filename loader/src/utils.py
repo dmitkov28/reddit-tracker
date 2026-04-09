@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
 
 
 @dataclass
@@ -9,5 +10,11 @@ class Date:
     day: int = datetime.today().day
 
 
-def build_path(bucket: str, athena_dir: str, date_dir: str = current_date()) -> str:
-    return f"s3://{bucket}/{athena_dir}/{date_dir}"
+def build_path(
+    bucket: str,
+    athena_dir: str,
+    query_type: Literal["subreddits", "threads", "comments"],
+    date: Date = Date(),
+) -> str:
+
+    return f"s3://{bucket}/{athena_dir}/{query_type}/year={date.year}/month={date.month}/day={date.day}"
