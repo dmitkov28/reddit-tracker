@@ -1,0 +1,350 @@
+{
+    "Comment": "Reddit Tracker Step Function",
+    "StartAt": "Read Subreddits",
+    "States": {
+        "Read Subreddits": {
+            "Type": "Map",
+            "ItemProcessor": {
+                "ProcessorConfig": {
+                    "Mode": "DISTRIBUTED",
+                    "ExecutionType": "EXPRESS"
+                },
+                "StartAt": "Fetcher",
+                "States": {
+                    "Fetcher": {
+                        "Type": "Task",
+                        "Resource": "arn:aws:states:::lambda:invoke",
+                        "Output": "{% $states.result.Payload %}",
+                        "Arguments": {
+                            "FunctionName": "${fetcher_function_name}",
+                            "Payload": {
+                                "subreddit": "{% $states.input %}"
+                            }
+                        },
+                        "Retry": [
+                            {
+                                "ErrorEquals": [
+                                    "Lambda.ServiceException",
+                                    "Lambda.AWSLambdaException",
+                                    "Lambda.SdkClientException",
+                                    "Lambda.TooManyRequestsException"
+                                ],
+                                "IntervalSeconds": 1,
+                                "MaxAttempts": 3,
+                                "BackoffRate": 2,
+                                "JitterStrategy": "FULL"
+                            }
+                        ],
+                        "End": true
+                    }
+                }
+            },
+            "ItemReader": {
+                "Resource": "arn:aws:states:::s3:getObject",
+                "ReaderConfig": {
+                    "InputType": "JSON"
+                },
+                "Arguments": {
+                    "Bucket": "${bucket_name}",
+                    "Key": "subreddits.json"
+                }
+            },
+            "MaxConcurrency": 20,
+            "Label": "ReadSubreddits",
+            "Next": "Run Athena Queries"
+        },
+        "Run Athena Queries": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "Get Subreddits Query",
+                    "States": {
+                        "Get Subreddits Query": {
+                            "Type": "Task",
+                            "Arguments": {
+                                "NamedQueryId": "${subreddits_query_id}"
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:athena:getNamedQuery",
+                            "Next": "Start Subreddits Query"
+                        },
+                        "Start Subreddits Query": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::athena:startQueryExecution",
+                            "Arguments": {
+                                "QueryString": "{% $states.input.NamedQuery.QueryString %}",
+                                "WorkGroup": "{% $states.input.NamedQuery.WorkGroup %}"
+                            },
+                            "Next": "Athena Get Subreddits Query State"
+                        },
+                        "Athena Get Subreddits Query State": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::athena:getQueryExecution",
+                            "Arguments": {
+                                "QueryExecutionId": "{% $states.input.QueryExecutionId %}"
+                            },
+                            "Next": "Subreddits Query Succeeded?",
+                            "Output": {
+                                "QueryExecutionId": "{% $states.result.QueryExecution.QueryExecutionId %}",
+                                "State": "{% $states.result.QueryExecution.Status.State%}"
+                            }
+                        },
+                        "Subreddits Query Succeeded?": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Next": "Subreddits Query Succeeded",
+                                    "Condition": "{% $states.input.State = 'SUCCEEDED' %}",
+                                    "Output": {
+                                        "QueryExecutionId": "{% $states.input.QueryExecutionId %}"
+                                    }
+                                },
+                                {
+                                    "Next": "Subreddits Query Failed",
+                                    "Condition": "{% $states.input.State = 'FAILED' %}"
+                                }
+                            ],
+                            "Default": "Wait Subreddits Query"
+                        },
+                        "Subreddits Query Succeeded": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "Wait Subreddits Query": {
+                            "Type": "Wait",
+                            "Seconds": 5,
+                            "Next": "Athena Get Subreddits Query State",
+                            "Output": {
+                                "QueryExecutionId": "{% $states.input.QueryExecutionId %}"
+                            }
+                        },
+                        "Subreddits Query Failed": {
+                            "Type": "Fail"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "Get Threads Query",
+                    "States": {
+                        "Get Threads Query": {
+                            "Type": "Task",
+                            "Arguments": {
+                                "NamedQueryId": "${threads_query_id}"
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:athena:getNamedQuery",
+                            "Next": "Athena Threads Query"
+                        },
+                        "Athena Threads Query": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::athena:startQueryExecution",
+                            "Arguments": {
+                                "QueryString": "{% $states.input.NamedQuery.QueryString %}",
+                                "WorkGroup": "{% $states.input.NamedQuery.WorkGroup %}"
+                            },
+                            "Next": "Athena Get Threads Query State"
+                        },
+                        "Athena Get Threads Query State": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::athena:getQueryExecution",
+                            "Arguments": {
+                                "QueryExecutionId": "{% $states.input.QueryExecutionId %}"
+                            },
+                            "Next": "Threads Query Succeeded?",
+                            "Output": {
+                                "QueryExecutionId": "{% $states.result.QueryExecution.QueryExecutionId %}",
+                                "State": "{% $states.result.QueryExecution.Status.State%}"
+                            }
+                        },
+                        "Threads Query Succeeded?": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Next": "Threads Query Succeeded",
+                                    "Condition": "{% $states.input.State = 'SUCCEEDED' %}"
+                                },
+                                {
+                                    "Next": "Threads Query Failed",
+                                    "Condition": "{% $states.input.State = 'FAILED' %}"
+                                }
+                            ],
+                            "Default": "Wait Threads Query"
+                        },
+                        "Threads Query Succeeded": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "Wait Threads Query": {
+                            "Type": "Wait",
+                            "Seconds": 5,
+                            "Next": "Athena Get Threads Query State",
+                            "Output": {
+                                "QueryExecutionId": "{% $states.input.QueryExecutionId %}"
+                            }
+                        },
+                        "Threads Query Failed": {
+                            "Type": "Fail"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "Get Comments Query",
+                    "States": {
+                        "Get Comments Query": {
+                            "Type": "Task",
+                            "Arguments": {
+                                "NamedQueryId": "${comments_query_id}"
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:athena:getNamedQuery",
+                            "Next": "Athena Start Comments Query"
+                        },
+                        "Athena Start Comments Query": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::athena:startQueryExecution",
+                            "Arguments": {
+                                "QueryString": "{% $states.input.NamedQuery.QueryString %}",
+                                "WorkGroup": "{% $states.input.NamedQuery.WorkGroup %}"
+                            },
+                            "Next": "Athena Get Comments Query State"
+                        },
+                        "Athena Get Comments Query State": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::athena:getQueryExecution",
+                            "Arguments": {
+                                "QueryExecutionId": "{% $states.input.QueryExecutionId %}"
+                            },
+                            "Next": "Comments Query Succeeded?",
+                            "Output": {
+                                "QueryExecutionId": "{% $states.result.QueryExecution.QueryExecutionId %}",
+                                "State": "{% $states.result.QueryExecution.Status.State%}"
+                            }
+                        },
+                        "Comments Query Succeeded?": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Next": "Comments Query Succeeded",
+                                    "Condition": "{% $states.input.State = 'SUCCEEDED' %}"
+                                },
+                                {
+                                    "Next": "Comments Query Failed",
+                                    "Condition": "{% $states.input.State = 'FAILED' %}"
+                                }
+                            ],
+                            "Default": "Wait Comments Query"
+                        },
+                        "Comments Query Succeeded": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "Wait Comments Query": {
+                            "Type": "Wait",
+                            "Seconds": 5,
+                            "Output": {
+                                "QueryExecutionId": "{% $states.input.QueryExecutionId %}"
+                            },
+                            "Next": "Athena Get Comments Query State"
+                        },
+                        "Comments Query Failed": {
+                            "Type": "Fail"
+                        }
+                    }
+                }
+            ],
+            "Next": "Load Data"
+        },
+        "Load Data": {
+            "Type": "Parallel",
+            "End": true,
+            "Branches": [
+                {
+                    "StartAt": "Load Subreddits",
+                    "States": {
+                        "Load Subreddits": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::lambda:invoke",
+                            "Output": "{% $states.result.Payload %}",
+                            "Arguments": {
+                                "FunctionName": "${loader_function_name}",
+                                "Payload": {
+                                    "query_type": "subreddits"
+                                }
+                            },
+                            "Retry": [
+                                {
+                                    "ErrorEquals": [
+                                        "Lambda.ServiceException",
+                                        "Lambda.AWSLambdaException",
+                                        "Lambda.SdkClientException",
+                                        "Lambda.TooManyRequestsException"
+                                    ],
+                                    "IntervalSeconds": 1,
+                                    "MaxAttempts": 3,
+                                    "BackoffRate": 2,
+                                    "JitterStrategy": "FULL"
+                                }
+                            ],
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "Load Threads",
+                    "States": {
+                        "Load Threads": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::lambda:invoke",
+                            "Output": "{% $states.result.Payload %}",
+                            "Arguments": {
+                                "FunctionName": "${loader_function_name}",
+                                "Payload": {
+                                    "query_type": "threads"
+                                }
+                            },
+                            "Retry": [
+                                {
+                                    "ErrorEquals": [
+                                        "Lambda.ServiceException",
+                                        "Lambda.AWSLambdaException",
+                                        "Lambda.SdkClientException",
+                                        "Lambda.TooManyRequestsException"
+                                    ],
+                                    "IntervalSeconds": 1,
+                                    "MaxAttempts": 3,
+                                    "BackoffRate": 2,
+                                    "JitterStrategy": "FULL"
+                                }
+                            ],
+                            "Next": "Load Comments"
+                        },
+                        "Load Comments": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::lambda:invoke",
+                            "Output": "{% $states.result.Payload %}",
+                            "Arguments": {
+                                "FunctionName": "${loader_function_name}",
+                                "Payload": {
+                                    "query_type": "comments"
+                                }
+                            },
+                            "Retry": [
+                                {
+                                    "ErrorEquals": [
+                                        "Lambda.ServiceException",
+                                        "Lambda.AWSLambdaException",
+                                        "Lambda.SdkClientException",
+                                        "Lambda.TooManyRequestsException"
+                                    ],
+                                    "IntervalSeconds": 1,
+                                    "MaxAttempts": 3,
+                                    "BackoffRate": 2,
+                                    "JitterStrategy": "FULL"
+                                }
+                            ],
+                            "End": true
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "QueryLanguage": "JSONata"
+}
