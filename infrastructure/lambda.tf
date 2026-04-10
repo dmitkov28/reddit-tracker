@@ -47,131 +47,6 @@ module "fetcher-lambda-function" {
   tags = { "Terraform" : true }
 }
 
-module "dispatcher-lambda-function" {
-  source  = "terraform-aws-modules/lambda/aws"
-  version = "8.7.0"
-
-  function_name = "reddit-tracker-dispatcher"
-  description   = "Reddit Tracker Dispatcher"
-  architectures = ["arm64"]
-
-  create_package               = true
-  source_path                  = "../dispatcher/main.py"
-  trigger_on_package_timestamp = false
-
-  memory_size = 128
-  timeout     = 15
-
-  runtime = "python3.13"
-  handler = "main.lambda_handler"
-
-  environment_variables = {
-    "BUCKET"  = aws_s3_bucket.reddit-tracker-bucket.bucket
-    "FETCHER" = module.fetcher-lambda-function.lambda_function_name
-  }
-
-  package_type = "Zip"
-
-  cloudwatch_logs_retention_in_days = 5
-
-  attach_policy_statements = true
-  policy_statements = {
-    bucket_read = {
-      effect = "Allow"
-      actions = [
-        "s3:GetObject",
-        "s3:ListBucket"
-      ]
-      resources = [
-        aws_s3_bucket.reddit-tracker-bucket.arn,
-        "${aws_s3_bucket.reddit-tracker-bucket.arn}/*"
-      ]
-    }
-    invoke_lambda = {
-      effect = "Allow"
-      actions = [
-        "lambda:InvokeFunction"
-      ]
-      resources = [
-        module.fetcher-lambda-function.lambda_function_arn
-      ]
-    }
-  }
-
-  tags = { "Terraform" : true }
-}
-
-module "transformer-lambda-function" {
-  source  = "terraform-aws-modules/lambda/aws"
-  version = "8.7.0"
-
-  function_name = "reddit-tracker-transformer"
-  description   = "Reddit Tracker Transformer"
-  architectures = ["arm64"]
-
-  create_package               = true
-  source_path                  = "../transformer/main.py"
-  trigger_on_package_timestamp = false
-
-  memory_size = 128
-  timeout     = 15
-
-  runtime = "python3.13"
-  handler = "main.lambda_handler"
-
-  environment_variables = {
-    "BUCKET"    = aws_s3_bucket.reddit-tracker-bucket.bucket
-    "ATHENA_DB" = aws_glue_catalog_database.reddit.name
-  }
-
-  package_type = "Zip"
-
-  cloudwatch_logs_retention_in_days = 5
-
-  attach_policy_statements = true
-  policy_statements = {
-    bucket_permissions = {
-      effect = "Allow"
-      actions = [
-        "s3:GetObject",
-        "s3:ListBucket",
-        "s3:PutObject",
-        "s3:GetBucketLocation"
-      ]
-      resources = [
-        aws_s3_bucket.reddit-tracker-bucket.arn,
-        "${aws_s3_bucket.reddit-tracker-bucket.arn}/*"
-      ]
-    }
-    glue_read = {
-      effect = "Allow"
-      actions = [
-        "glue:GetTable",
-        "glue:GetDatabase",
-        "glue:GetPartitions"
-      ]
-      resources = [
-        "arn:aws:glue:eu-central-1:${data.aws_caller_identity.current.account_id}:catalog",
-        aws_glue_catalog_database.reddit.arn,
-        "arn:aws:glue:eu-central-1:${data.aws_caller_identity.current.account_id}:table/${aws_glue_catalog_database.reddit.name}/*"
-      ]
-    }
-    athena_query = {
-      effect = "Allow"
-      actions = [
-        "athena:StartQueryExecution"
-      ]
-      resources = [
-        "*"
-      ]
-    }
-
-  }
-
-  tags = { "Terraform" : true }
-}
-
-
 module "loader-lambda-function" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "8.7.0"
@@ -179,7 +54,7 @@ module "loader-lambda-function" {
   function_name = "reddit-tracker-loader"
   description   = "Reddit Tracker Loader"
   architectures = ["arm64"]
-  image_uri = "${module.reddit-tracker-loader-ecr.repository_url}:latest"
+  image_uri     = "${module.reddit-tracker-loader-ecr.repository_url}:sha-f8c3463f7e"
 
   create_package = false
 
