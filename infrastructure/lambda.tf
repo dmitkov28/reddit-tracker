@@ -15,7 +15,7 @@ module "fetcher-lambda-function" {
     "BUCKET"     = aws_s3_bucket.reddit-tracker-bucket.bucket
   }
 
-  image_uri    = "${module.reddit-tracker-ecr.repository_url}:${var.image_tag}"
+  image_uri    = "${module.reddit-tracker-ecr.repository_url}:${var.fetcher_image_tag}"
   package_type = "Image"
 
   ignore_source_code_hash = true
@@ -54,7 +54,7 @@ module "loader-lambda-function" {
   function_name = "reddit-tracker-loader"
   description   = "Reddit Tracker Loader"
   architectures = ["arm64"]
-  image_uri     = "${module.reddit-tracker-loader-ecr.repository_url}:sha-f8c3463f7e"
+  image_uri     = "${module.reddit-tracker-loader-ecr.repository_url}:${var.loader_image_tag}"
 
   create_package = false
 
