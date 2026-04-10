@@ -15,14 +15,16 @@ jobs:
     plan:
         runs-on: ubuntu-latest
         outputs:
-            image_tag: ${{ steps.tag.outputs.image_tag }}
+            fetcher_image_tag: ${{ steps.fetcher_tag.outputs.fetcher_image_tag }}
+            loader_image_tag: ${{ steps.loader_tag.outputs.loader_image_tag }}
         defaults:
             run:
                 working-directory: ./infrastructure
         env:
             TF_CLOUD_ORGANIZATION: "dmitkov28"
             TF_WORKSPACE: "reddit-tracker-workspace"
-            ECR_REPO: "reddit-tracker-ecr"
+            FETCHER_ECR_REPO: "reddit-tracker-ecr"
+            LOADER_ECR_REPO: "reddit-tracker-loader-ecr"
 
         steps:
             - name: Checkout code
@@ -34,14 +36,24 @@ jobs:
                   role-to-assume: arn:aws:iam::029646685128:role/reddit-tracker-gh-actions
                   aws-region: eu-central-1
 
-            - name: Get latest image tag
-              id: tag
+            - name: Get latest fetcher image tag
+              id: fetcher_tag
               run: |
                   IMAGE_TAG=$(aws ecr describe-images \
-                  --repository-name reddit-tracker-ecr \
+                  --repository-name ${{ env.FETCHER_ECR_REPO }} \
                   --query 'sort_by(imageDetails, &imagePushedAt)[-1].imageTags[0]' \
                   --output text)
-                  echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+                  echo "fetcher_image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+            
+            - name: Get latest loader image tag
+              id: loader_tag
+              run: |
+                  IMAGE_TAG=$(aws ecr describe-images \
+                  --repository-name ${{ env.LOADER_ECR_REPO }} \
+                  --query 'sort_by(imageDetails, &imagePushedAt)[-1].imageTags[0]' \
+                  --output text)
+                  echo "loader_image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
             - name: Setup Terraform
               uses: hashicorp/setup-terraform@v4
@@ -50,10 +62,12 @@ jobs:
 
             - name: Create plan
               env:
-                  IMAGE_TAG: ${{ steps.tag.outputs.image_tag }}
+                  FETCHER_TAG: ${{ steps.fetcher_tag.outputs.fetcher_image_tag }}
+                  LOADER_TAG: ${{ steps.loader_tag.outputs.loader_image_tag }}
+
               run: |
                   terraform init
-                  terraform plan --var="image_tag=$IMAGE_TAG" -out=tfplan
+                  terraform plan --var="fetcher_image_tag=$FETCHER_TAG" --var="loader_image_tag=$LOADER_TAG" -out=tfplan
 
             - name: Upload Plan
               uses: actions/upload-artifact@v7
