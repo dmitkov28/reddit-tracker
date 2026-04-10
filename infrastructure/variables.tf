@@ -3,7 +3,11 @@ variable "http_proxy" {
   sensitive = true
 }
 
-variable "image_tag" {
+variable "fetcher_image_tag" {
+  type = string
+}
+
+variable "loader_image_tag" {
   type = string
 }
 
