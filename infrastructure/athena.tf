@@ -1,5 +1,6 @@
 resource "aws_athena_workgroup" "athena_wg" {
-  name = "reddit-tracker"
+  name          = "reddit-tracker"
+  force_destroy = true
   configuration {
     result_configuration {
       output_location = "s3://${aws_s3_bucket.reddit-tracker-bucket.bucket}/athena/"
