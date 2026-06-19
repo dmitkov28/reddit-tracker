@@ -1,5 +1,6 @@
 resource "aws_s3_bucket" "reddit-tracker-bucket" {
   bucket = "rt-reddit-tracker-bucket"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "reddit-tracker-bucket-lifecycle-config" {
